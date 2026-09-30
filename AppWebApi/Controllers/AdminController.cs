@@ -7,13 +7,14 @@ using Services;
 using Configuration;
 using Configuration.Options;
 using Microsoft.Extensions.Options;
+using Models.DTO;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace AppWebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]/[action]")]   
+    [Route("api/[controller]/[action]")]
     public class AdminController : Controller
     {
         readonly ILogger<AdminController> _logger;
@@ -44,7 +45,7 @@ namespace AppWebApi.Controllers
                 _logger.LogError($"{nameof(Environment)}: {ex.Message}");
                 return BadRequest(ex.Message);
             }
-         }
+        }
 
         [HttpGet()]
         [ActionName("Version")]
@@ -67,7 +68,7 @@ namespace AppWebApi.Controllers
         [ActionName("Seed")]
         [ProducesResponseType(200, Type = typeof(string))]
         [ProducesResponseType(400, Type = typeof(string))]
-       public async Task<IActionResult> Seed(int nrItems = 10)
+        public async Task<IActionResult> Seed(int nrItems = 10)
         {
             try
             {
@@ -82,7 +83,29 @@ namespace AppWebApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
-                //GET: api/admin/removeseed
+        //Remove seed with stored procedure 
+        [HttpGet()]
+        [ActionName("RemoveSeedSp")]
+        [ProducesResponseType(200, Type = typeof(ResponseItemDto<DatabaseCountedDto>))]
+        [ProducesResponseType(400, Type = typeof(string))]
+        public async Task<IActionResult> RemoveSeedWithSp(bool seeded = true)
+        {
+            try
+            {
+                _logger.LogInformation($"{nameof(RemoveSeedWithSp)}: {nameof(seeded)}: {seeded}");
+                var info = await _service.RemoveSeedWithStoredProcedure(seeded);
+                return Ok(info);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"{nameof(RemoveSeedWithSp)}: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+
+
+        }
+
+        //GET: api/admin/removeseed
         [HttpGet()]
         [ActionName("RemoveSeed")]
         [ProducesResponseType(200, Type = typeof(Task<string>))]
@@ -94,12 +117,30 @@ namespace AppWebApi.Controllers
                 bool seededArg = bool.Parse(seeded);
 
                 _logger.LogInformation($"{nameof(RemoveSeed)}: {nameof(seededArg)}: {seededArg}");
-                 await _service.RemoveSeedAsync(seededArg);
-                return Ok("Seeded items removed successfully");        
+                await _service.RemoveSeedAsync(seededArg);
+                return Ok("Seeded items removed successfully");
             }
             catch (Exception ex)
             {
                 _logger.LogError($"{nameof(RemoveSeed)}: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpGet()]
+        [ActionName("CountInfo")]
+        [ProducesResponseType(200, Type = typeof(ResponseItemDto<DatabaseCountedDto>))]
+        [ProducesResponseType(400, Type = typeof(string))]
+        public async Task<IActionResult> CountInfo()
+        {
+            try
+            {
+                _logger.LogInformation($"{nameof(CountInfo)}");
+                var resp = await _service.CountInfoAsync();
+                return Ok(resp);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{nameof(CountInfo)}");
                 return BadRequest(ex.Message);
             }
         }
