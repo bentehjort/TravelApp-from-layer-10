@@ -19,4 +19,5 @@ public class Attraction : IAttraction, ISeed<Attraction>
         AttractionCategory = seeder.FromList<string>(categories);
         return this;
     }
+
 }
